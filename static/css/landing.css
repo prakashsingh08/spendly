@@ -195,3 +195,67 @@
     .lp-stats { grid-template-columns: 1fr; }
     .lp-preview { margin-top: 3rem; padding: 1.1rem; }
 }
+
+/* ------------------------------------------------------------------ */
+/* "See how it works" video modal                                      */
+/* ------------------------------------------------------------------ */
+
+button.lp-btn {
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.lp-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: rgba(15, 15, 15, 0.75);
+}
+
+.lp-modal[hidden] { display: none; }
+
+.lp-modal-dialog {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    background: var(--ink);
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.lp-modal-close {
+    position: absolute;
+    top: -44px;
+    right: 0;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.lp-modal-close:hover { background: rgba(255, 255, 255, 0.3); }
+
+.lp-modal-video {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.lp-modal-video iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
