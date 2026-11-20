@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from datetime import date
+from datetime import date, timedelta
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -140,3 +140,44 @@ def authenticate_user(email, password):
     if user is None or not check_password_hash(user["password_hash"], password):
         return None
     return user
+
+
+def get_user_by_id(user_id):
+    """Return id, name, email, created_at for this user, or None.
+
+    Never selects password_hash: this is for display.
+    """
+    conn = get_db()
+    try:
+        return conn.execute(
+            "SELECT id, name, email, created_at FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+    finally:
+        conn.close()
+
+
+def get_expense_summary(user_id, today=None):
+    """Return {"count", "total", "month_total"} for this user's expenses.
+
+    month_total covers the calendar month containing `today`
+    (defaults to date.today()). A user with no expenses gets zeros.
+    """
+    today = today or date.today()
+    month_start = today.replace(day=1)
+    next_month_start = (month_start.replace(day=28) + timedelta(days=4)).replace(
+        day=1
+    )
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT COUNT(*), "
+            "COALESCE(SUM(amount), 0), "
+            "COALESCE(SUM(CASE WHEN date >= ? AND date < ? "
+            "THEN amount END), 0) "
+            "FROM expenses WHERE user_id = ?",
+            (month_start.isoformat(), next_month_start.isoformat(), user_id),
+        ).fetchone()
+    finally:
+        conn.close()
+    return {"count": row[0], "total": row[1], "month_total": row[2]}
