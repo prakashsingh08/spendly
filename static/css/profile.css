@@ -1,0 +1,123 @@
+/* ------------------------------------------------------------------ */
+/* Profile page                                                        */
+/* ------------------------------------------------------------------ */
+
+.profile-section {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 3rem 2rem 4rem;
+}
+
+.profile-header { margin-bottom: 2rem; }
+
+.profile-title {
+    font-family: var(--font-display);
+    font-size: 2.25rem;
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.profile-subtitle {
+    margin-top: 0.35rem;
+    color: var(--ink-muted);
+    font-size: 0.95rem;
+}
+
+.profile-card,
+.profile-stat {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.profile-card {
+    padding: 1.75rem 2rem;
+    margin-bottom: 2.5rem;
+}
+
+.profile-card-title,
+.profile-section-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 1rem;
+}
+
+.profile-details {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.profile-detail {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    gap: 1rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.profile-detail:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.profile-detail dt {
+    color: var(--ink-muted);
+    font-size: 0.9rem;
+}
+
+.profile-detail dd {
+    color: var(--ink);
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.profile-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 1.4rem 1.5rem;
+}
+
+.profile-stat-label {
+    font-size: 0.875rem;
+    color: var(--ink-muted);
+}
+
+.profile-stat-value {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.profile-empty {
+    margin-top: 1.25rem;
+    padding: 1rem 1.25rem;
+    background: var(--paper-warm);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--ink-muted);
+    font-size: 0.9rem;
+}
+
+@media (max-width: 600px) {
+    .profile-section { padding: 2rem 1rem 3rem; }
+    .profile-title { font-size: 1.85rem; }
+    .profile-card { padding: 1.25rem; }
+    .profile-detail {
+        grid-template-columns: 1fr;
+        gap: 0.2rem;
+    }
+    .profile-stats { grid-template-columns: 1fr; }
+}

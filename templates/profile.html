@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<section class="profile-section">
+
+    <header class="profile-header">
+        <h1 class="profile-title">{{ user.name }}</h1>
+        <p class="profile-subtitle">Your account and spending at a glance</p>
+    </header>
+
+    <div class="profile-card">
+        <h2 class="profile-card-title">Account</h2>
+        <dl class="profile-details">
+            <div class="profile-detail">
+                <dt>Name</dt>
+                <dd>{{ user.name }}</dd>
+            </div>
+            <div class="profile-detail">
+                <dt>Email</dt>
+                <dd>{{ user.email }}</dd>
+            </div>
+            <div class="profile-detail">
+                <dt>Member since</dt>
+                <dd>{{ user.created_at | member_since }}</dd>
+            </div>
+        </dl>
+    </div>
+
+    <h2 class="profile-section-title">Spending summary</h2>
+    <div class="profile-stats">
+        <div class="profile-stat">
+            <span class="profile-stat-label">Expenses</span>
+            <span class="profile-stat-value">{{ summary.count }}</span>
+        </div>
+        <div class="profile-stat">
+            <span class="profile-stat-label">Total spent</span>
+            <span class="profile-stat-value">₹{{ "{:,.2f}".format(summary.total) }}</span>
+        </div>
+        <div class="profile-stat">
+            <span class="profile-stat-label">This month</span>
+            <span class="profile-stat-value">₹{{ "{:,.2f}".format(summary.month_total) }}</span>
+        </div>
+    </div>
+
+    {% if summary.count == 0 %}
+    <p class="profile-empty">No expenses yet.</p>
+    {% endif %}
+
+</section>
+
+{% endblock %}

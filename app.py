@@ -1,5 +1,7 @@
 import os
 import sqlite3
+from datetime import datetime
+from functools import wraps
 
 from flask import (
     Flask,
@@ -15,7 +17,9 @@ from database.db import (
     authenticate_user,
     create_user,
     get_db,
+    get_expense_summary,
     get_user_by_email,
+    get_user_by_id,
     init_db,
     seed_db,
 )
@@ -60,6 +64,36 @@ def validate_registration(name, email, password):
     if len(password) < MIN_PASSWORD_LENGTH:
         return SHORT_PASSWORD_ERROR
     return None
+
+
+# ------------------------------------------------------------------ #
+# Auth helpers                                                        #
+# ------------------------------------------------------------------ #
+
+LOGIN_REQUIRED_MESSAGE = "Please sign in to continue."
+
+
+def login_required(view):
+    """Redirect to the login page unless a user is in the session."""
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not session.get("user_id"):
+            flash(LOGIN_REQUIRED_MESSAGE, "error")
+            return redirect(url_for("login"))
+        return view(*args, **kwargs)
+    return wrapped
+
+
+# ------------------------------------------------------------------ #
+# Template filters                                                    #
+# ------------------------------------------------------------------ #
+
+@app.template_filter("member_since")
+def member_since(value):
+    """Format a SQLite 'YYYY-MM-DD HH:MM:SS' timestamp as '20 Nov 2026'."""
+    if not value:
+        return ""
+    return datetime.strptime(value[:10], "%Y-%m-%d").strftime("%d %b %Y")
 
 
 # ------------------------------------------------------------------ #
@@ -141,14 +175,22 @@ def privacy():
     return render_template("privacy.html")
 
 
+@app.route("/profile")
+@login_required
+def profile():
+    user = get_user_by_id(session["user_id"])
+    if user is None:
+        # Session points at a deleted user: treat as signed out.
+        session.clear()
+        flash(LOGIN_REQUIRED_MESSAGE, "error")
+        return redirect(url_for("login"))
+    summary = get_expense_summary(user["id"])
+    return render_template("profile.html", user=user, summary=summary)
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
-
-@app.route("/profile")
-def profile():
-    return "Profile page — coming in Step 4"
-
 
 @app.route("/expenses/add")
 def add_expense():
