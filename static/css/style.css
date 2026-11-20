@@ -113,11 +113,32 @@ a { color: inherit; text-decoration: none; }
 
 .nav-cta:hover { background: var(--accent) !important; }
 
+.nav-user {
+    color: var(--ink-soft);
+    font-weight: 600;
+    max-width: 12rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* ------------------------------------------------------------------ */
 /* Main                                                                */
 /* ------------------------------------------------------------------ */
 
 .main-content { min-height: calc(100vh - 60px - 100px); }
+
+/* ------------------------------------------------------------------ */
+/* Flash messages                                                      */
+/* ------------------------------------------------------------------ */
+
+.flash-messages {
+    max-width: var(--auth-width);
+    margin: 0 auto;
+    padding: 1.5rem 2rem 0;
+}
+
+.flash-messages > div:last-child { margin-bottom: 0; }
 
 /* ------------------------------------------------------------------ */
 /* Hero                                                                */
@@ -591,5 +612,7 @@ a { color: inherit; text-decoration: none; }
 
 @media (max-width: 600px) {
     .nav-links a:not(.nav-cta) { display: none; }
+    .nav-user { max-width: 7rem; }
+    .flash-messages { padding: 1rem 1rem 0; }
     .hero { padding: 3rem 1rem 2rem; }
 }
