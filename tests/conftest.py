@@ -17,3 +17,17 @@ def conn(temp_db):
     connection = db.get_db()
     yield connection
     connection.close()
+
+
+@pytest.fixture
+def app(temp_db):
+    """Flask app wired to the temp DB, seeded with the demo user.
+
+    Imported inside the fixture: importing app.py runs init_db()/seed_db(),
+    so DB_PATH must already point at the temp file.
+    """
+    from app import app as flask_app
+
+    flask_app.config.update(TESTING=True)
+    db.seed_db()
+    yield flask_app
