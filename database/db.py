@@ -158,33 +158,80 @@ def get_user_by_id(user_id):
 
 
 # ------------------------------------------------------------------ #
+# Date range filter                                                   #
+# ------------------------------------------------------------------ #
+
+def _date_range_clause(start_date=None, end_date=None):
+    """Return (sql_fragment, params) limiting expenses.date to a range.
+
+    Both bounds are inclusive ISO 'YYYY-MM-DD' strings, or None for an
+    open end. The fragment is built only from fixed strings; the dates
+    are always bound as parameters.
+    """
+    fragment = ""
+    params = []
+    if start_date:
+        fragment += " AND date >= ?"
+        params.append(start_date)
+    if end_date:
+        fragment += " AND date <= ?"
+        params.append(end_date)
+    return fragment, params
+
+# --------------------- end date range filter ---------------------- #
+
+
+# ------------------------------------------------------------------ #
+# Expense existence                                                   #
+# ------------------------------------------------------------------ #
+
+def user_has_expenses(user_id):
+    """Return True if this user has at least one expense."""
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT 1 FROM expenses WHERE user_id = ? LIMIT 1", (user_id,)
+        ).fetchone()
+    finally:
+        conn.close()
+    return row is not None
+
+# --------------------- end expense existence ---------------------- #
+
+
+# ------------------------------------------------------------------ #
 # Summary stats                                                       #
 # ------------------------------------------------------------------ #
 
-def get_expense_summary(user_id, today=None):
+def get_expense_summary(user_id, today=None, *, start_date=None, end_date=None):
     """Return {"count", "total", "month_total"} for this user's expenses.
 
-    month_total covers the calendar month containing `today`
-    (defaults to date.today()). A user with no expenses gets zeros.
+    count and total cover expenses between start_date and end_date
+    (inclusive; None means open-ended). month_total always covers the
+    calendar month containing `today` (defaults to date.today()),
+    regardless of the range. A user with no expenses gets zeros.
     """
     today = today or date.today()
     month_start = today.replace(day=1)
     next_month_start = (month_start.replace(day=28) + timedelta(days=4)).replace(
         day=1
     )
+    range_sql, range_params = _date_range_clause(start_date, end_date)
     conn = get_db()
     try:
-        row = conn.execute(
-            "SELECT COUNT(*), "
-            "COALESCE(SUM(amount), 0), "
-            "COALESCE(SUM(CASE WHEN date >= ? AND date < ? "
-            "THEN amount END), 0) "
-            "FROM expenses WHERE user_id = ?",
-            (month_start.isoformat(), next_month_start.isoformat(), user_id),
+        count, total = conn.execute(
+            "SELECT COUNT(*), COALESCE(SUM(amount), 0) "
+            "FROM expenses WHERE user_id = ?" + range_sql,
+            (user_id, *range_params),
         ).fetchone()
+        month_total = conn.execute(
+            "SELECT COALESCE(SUM(amount), 0) FROM expenses "
+            "WHERE user_id = ? AND date >= ? AND date < ?",
+            (user_id, month_start.isoformat(), next_month_start.isoformat()),
+        ).fetchone()[0]
     finally:
         conn.close()
-    return {"count": row[0], "total": row[1], "month_total": row[2]}
+    return {"count": count, "total": total, "month_total": month_total}
 
 # ---------------------- end summary stats ------------------------- #
 
@@ -193,20 +240,22 @@ def get_expense_summary(user_id, today=None):
 # Transaction history                                                 #
 # ------------------------------------------------------------------ #
 
-def get_recent_expenses(user_id, limit=10):
+def get_recent_expenses(user_id, limit=10, *, start_date=None, end_date=None):
     """Return up to `limit` of this user's expenses, newest first.
 
-    Rows have id, amount, category, date, description and are sorted by
-    date DESC, id DESC so same-day ties show the newest insert first.
-    A user with no expenses gets [].
+    Only expenses between start_date and end_date (inclusive; None means
+    open-ended) are considered. Rows have id, amount, category, date,
+    description and are sorted by date DESC, id DESC so same-day ties
+    show the newest insert first. No matching expenses gives [].
     """
+    range_sql, range_params = _date_range_clause(start_date, end_date)
     conn = get_db()
     try:
         return conn.execute(
             "SELECT id, amount, category, date, description "
-            "FROM expenses WHERE user_id = ? "
+            "FROM expenses WHERE user_id = ?" + range_sql + " "
             "ORDER BY date DESC, id DESC LIMIT ?",
-            (user_id, limit),
+            (user_id, *range_params, limit),
         ).fetchall()
     finally:
         conn.close()
@@ -218,21 +267,24 @@ def get_recent_expenses(user_id, limit=10):
 # Category breakdown                                                  #
 # ------------------------------------------------------------------ #
 
-def get_category_breakdown(user_id):
+def get_category_breakdown(user_id, *, start_date=None, end_date=None):
     """Return this user's spending per category, largest first.
 
-    Each item is {"category", "total", "count", "percent"}, where percent
-    is the category's share of the user's overall total (1 decimal).
-    Ties on total are ordered by category name. No expenses gives [].
+    Only expenses between start_date and end_date (inclusive; None means
+    open-ended) are counted. Each item is {"category", "total", "count",
+    "percent"}, where percent is the category's share of the total over
+    that range (1 decimal). Ties on total are ordered by category name.
+    No matching expenses gives [].
     """
+    range_sql, range_params = _date_range_clause(start_date, end_date)
     conn = get_db()
     try:
         rows = conn.execute(
             "SELECT category, SUM(amount), COUNT(*) "
-            "FROM expenses WHERE user_id = ? "
+            "FROM expenses WHERE user_id = ?" + range_sql + " "
             "GROUP BY category "
             "ORDER BY SUM(amount) DESC, category ASC",
-            (user_id,),
+            (user_id, *range_params),
         ).fetchall()
     finally:
         conn.close()

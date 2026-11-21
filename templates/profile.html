@@ -33,16 +33,61 @@
         </dl>
     </div>
 
+    {# ===== DATE FILTER ===== #}
+    <section class="date-filter" aria-labelledby="date-filter-title">
+        <h2 class="profile-section-title" id="date-filter-title">Filter by date</h2>
+
+        {% if date_filter.error %}
+        <div class="auth-error" role="alert">{{ date_filter.error }}</div>
+        {% endif %}
+
+        <form class="date-filter-form" method="get" action="{{ url_for('profile') }}">
+            <div class="date-filter-field">
+                <label for="filter-start">From</label>
+                <input class="form-input" type="date" id="filter-start" name="start"
+                       value="{{ date_filter.start_iso or '' }}">
+            </div>
+            <div class="date-filter-field">
+                <label for="filter-end">To</label>
+                <input class="form-input" type="date" id="filter-end" name="end"
+                       value="{{ date_filter.end_iso or '' }}">
+            </div>
+            <button type="submit" class="btn-primary date-filter-apply">Apply</button>
+        </form>
+
+        <nav class="date-presets" aria-label="Quick date ranges">
+            {% for preset in date_filter.presets %}
+            <a class="date-preset" href="{{ url_for('profile', **preset.params) }}"
+               {% if preset.key in date_filter.active %}aria-current="true"{% endif %}>{{ preset.label }}</a>
+            {% endfor %}
+        </nav>
+
+        {% if date_filter.is_active %}
+        <p class="date-filter-range">
+            {% if date_filter.start and date_filter.end %}
+            Showing {{ date_filter.start_iso | format_date }} – {{ date_filter.end_iso | format_date }}
+            {% elif date_filter.start %}
+            Since {{ date_filter.start_iso | format_date }}
+            {% else %}
+            Up to {{ date_filter.end_iso | format_date }}
+            {% endif %}
+        </p>
+        {% endif %}
+    </section>
+    {# ===== END DATE FILTER ===== #}
+
     {# ===== SUMMARY STATS ===== #}
     <h2 class="profile-section-title">Spending summary</h2>
     <div class="profile-stats">
         <div class="profile-stat">
             <span class="profile-stat-label">Expenses</span>
             <span class="profile-stat-value">{{ summary.count }}</span>
+            <span class="profile-stat-note">{{ date_filter.scope_label }}</span>
         </div>
         <div class="profile-stat">
             <span class="profile-stat-label">Total spent</span>
             <span class="profile-stat-value">₹{{ "{:,.2f}".format(summary.total) }}</span>
+            <span class="profile-stat-note">{{ date_filter.scope_label }}</span>
         </div>
         <div class="profile-stat">
             <span class="profile-stat-label">This month</span>
@@ -51,7 +96,11 @@
     </div>
 
     {% if summary.count == 0 %}
+    {% if has_any_expenses %}
+    <p class="profile-empty">No expenses in this period.</p>
+    {% else %}
     <p class="profile-empty">No expenses yet.</p>
+    {% endif %}
     {% endif %}
     {# ===== END SUMMARY STATS ===== #}
 
