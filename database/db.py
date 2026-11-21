@@ -157,6 +157,10 @@ def get_user_by_id(user_id):
         conn.close()
 
 
+# ------------------------------------------------------------------ #
+# Summary stats                                                       #
+# ------------------------------------------------------------------ #
+
 def get_expense_summary(user_id, today=None):
     """Return {"count", "total", "month_total"} for this user's expenses.
 
@@ -181,3 +185,65 @@ def get_expense_summary(user_id, today=None):
     finally:
         conn.close()
     return {"count": row[0], "total": row[1], "month_total": row[2]}
+
+# ---------------------- end summary stats ------------------------- #
+
+
+# ------------------------------------------------------------------ #
+# Transaction history                                                 #
+# ------------------------------------------------------------------ #
+
+def get_recent_expenses(user_id, limit=10):
+    """Return up to `limit` of this user's expenses, newest first.
+
+    Rows have id, amount, category, date, description and are sorted by
+    date DESC, id DESC so same-day ties show the newest insert first.
+    A user with no expenses gets [].
+    """
+    conn = get_db()
+    try:
+        return conn.execute(
+            "SELECT id, amount, category, date, description "
+            "FROM expenses WHERE user_id = ? "
+            "ORDER BY date DESC, id DESC LIMIT ?",
+            (user_id, limit),
+        ).fetchall()
+    finally:
+        conn.close()
+
+# -------------------- end transaction history --------------------- #
+
+
+# ------------------------------------------------------------------ #
+# Category breakdown                                                  #
+# ------------------------------------------------------------------ #
+
+def get_category_breakdown(user_id):
+    """Return this user's spending per category, largest first.
+
+    Each item is {"category", "total", "count", "percent"}, where percent
+    is the category's share of the user's overall total (1 decimal).
+    Ties on total are ordered by category name. No expenses gives [].
+    """
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT category, SUM(amount), COUNT(*) "
+            "FROM expenses WHERE user_id = ? "
+            "GROUP BY category "
+            "ORDER BY SUM(amount) DESC, category ASC",
+            (user_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    overall_total = sum(row[1] for row in rows)
+    breakdown = []
+    for category, total, count in rows:
+        percent = round(total / overall_total * 100, 1) if overall_total else 0.0
+        breakdown.append(
+            {"category": category, "total": total, "count": count, "percent": percent}
+        )
+    return breakdown
+
+# -------------------- end category breakdown ---------------------- #

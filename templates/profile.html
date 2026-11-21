@@ -33,6 +33,7 @@
         </dl>
     </div>
 
+    {# ===== SUMMARY STATS ===== #}
     <h2 class="profile-section-title">Spending summary</h2>
     <div class="profile-stats">
         <div class="profile-stat">
@@ -52,6 +53,61 @@
     {% if summary.count == 0 %}
     <p class="profile-empty">No expenses yet.</p>
     {% endif %}
+    {# ===== END SUMMARY STATS ===== #}
+
+    {# ===== CATEGORY BREAKDOWN ===== #}
+    {% if category_breakdown %}
+    <section class="category-breakdown">
+    <h2 class="profile-section-title">Spending by category</h2>
+    <ul class="category-list">
+        {% for item in category_breakdown %}
+        <li class="category-row">
+            <div class="category-meta">
+                <span class="category-name">{{ item.category }}</span>
+                <span class="category-figures">
+                    <span class="category-amount">₹{{ "{:,.2f}".format(item.total) }}</span>
+                    <span class="category-percent">{{ item.percent }}%</span>
+                </span>
+            </div>
+            <div class="category-bar" aria-hidden="true">
+                <div class="category-bar-fill" style="width: {{ item.percent }}%"></div>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    </section>
+    {% endif %}
+    {# ===== END CATEGORY BREAKDOWN ===== #}
+
+    {# ===== TRANSACTION HISTORY ===== #}
+    {% if recent_expenses %}
+    <div class="profile-transactions">
+    <h2 class="profile-section-title">Recent transactions</h2>
+    <div class="profile-table-wrap">
+        <table class="profile-table">
+            <thead>
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Category</th>
+                    <th scope="col" class="profile-table-amount">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in recent_expenses %}
+                <tr>
+                    <td class="profile-table-date">{{ e.date | format_date }}</td>
+                    <td>{{ e.description or "—" }}</td>
+                    <td>{{ e.category }}</td>
+                    <td class="profile-table-amount">₹{{ "{:,.2f}".format(e.amount) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    </div>
+    {% endif %}
+    {# ===== END TRANSACTION HISTORY ===== #}
 
 </section>
 

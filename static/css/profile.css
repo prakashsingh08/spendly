@@ -121,3 +121,135 @@
     }
     .profile-stats { grid-template-columns: 1fr; }
 }
+
+/* ===== CATEGORY BREAKDOWN ===== */
+.category-breakdown { margin-top: 2.5rem; }
+
+.category-list {
+    list-style: none;
+    margin: 0;
+    padding: 1.25rem 1.5rem;
+    display: grid;
+    gap: 1rem;
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.category-row {
+    display: grid;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
+.category-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+}
+
+.category-name {
+    color: var(--ink);
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+.category-figures {
+    display: flex;
+    gap: 0.75rem;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.category-amount { color: var(--ink); }
+
+.category-percent {
+    color: var(--ink-muted);
+    font-size: 0.875rem;
+    min-width: 3.25rem;
+    text-align: right;
+}
+
+.category-bar {
+    height: 0.5rem;
+    background: var(--border-soft);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.category-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+}
+
+@media (max-width: 600px) {
+    .category-list { padding: 1rem; }
+    .category-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.2rem;
+    }
+    .category-percent {
+        min-width: 0;
+        text-align: left;
+    }
+}
+/* ===== END CATEGORY BREAKDOWN ===== */
+
+/* ===== TRANSACTION HISTORY ===== */
+.profile-transactions { margin-top: 2.5rem; }
+
+.profile-table-wrap {
+    max-width: 100%;
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.profile-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-body);
+    font-size: 0.925rem;
+    color: var(--ink);
+}
+
+.profile-table th,
+.profile-table td {
+    padding: 0.85rem 1.25rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.profile-table th {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-muted);
+}
+
+.profile-table tbody tr:last-child td { border-bottom: none; }
+
+.profile-table-date {
+    color: var(--ink-muted);
+    white-space: nowrap;
+}
+
+.profile-table .profile-table-amount {
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 600px) {
+    .profile-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .profile-table { min-width: 32rem; }
+    .profile-table th,
+    .profile-table td { padding: 0.75rem 1rem; }
+}
+/* ===== END TRANSACTION HISTORY ===== */

@@ -16,8 +16,10 @@ from flask import (
 from database.db import (
     authenticate_user,
     create_user,
+    get_category_breakdown,
     get_db,
     get_expense_summary,
+    get_recent_expenses,
     get_user_by_email,
     get_user_by_id,
     init_db,
@@ -94,6 +96,47 @@ def member_since(value):
     if not value:
         return ""
     return datetime.strptime(value[:10], "%Y-%m-%d").strftime("%d %b %Y")
+
+
+# ------------------------------------------------------------------ #
+# Profile data — summary stats                                        #
+# ------------------------------------------------------------------ #
+
+def profile_summary_context(user_id):
+    """Template context for the profile's summary stat tiles."""
+    return {"summary": get_expense_summary(user_id)}
+
+# ---------------------- end summary stats ------------------------- #
+
+
+# ------------------------------------------------------------------ #
+# Profile data — transaction history                                  #
+# ------------------------------------------------------------------ #
+
+def profile_transactions_context(user_id):
+    """Template context for the profile's recent-transactions table."""
+    return {"recent_expenses": get_recent_expenses(user_id)}
+
+
+@app.template_filter("format_date")
+def format_date(value):
+    """Format an ISO 'YYYY-MM-DD' (or longer timestamp) as '20 Nov 2026'."""
+    if not value:
+        return ""
+    return datetime.strptime(value[:10], "%Y-%m-%d").strftime("%d %b %Y")
+
+# -------------------- end transaction history --------------------- #
+
+
+# ------------------------------------------------------------------ #
+# Profile data — category breakdown                                   #
+# ------------------------------------------------------------------ #
+
+def profile_categories_context(user_id):
+    """Template context for the profile's spending-by-category bars."""
+    return {"category_breakdown": get_category_breakdown(user_id)}
+
+# -------------------- end category breakdown ---------------------- #
 
 
 # ------------------------------------------------------------------ #
@@ -184,8 +227,13 @@ def profile():
         session.clear()
         flash(LOGIN_REQUIRED_MESSAGE, "error")
         return redirect(url_for("login"))
-    summary = get_expense_summary(user["id"])
-    return render_template("profile.html", user=user, summary=summary)
+    return render_template(
+        "profile.html",
+        user=user,
+        **profile_summary_context(user["id"]),
+        **profile_transactions_context(user["id"]),
+        **profile_categories_context(user["id"]),
+    )
 
 
 # ------------------------------------------------------------------ #
