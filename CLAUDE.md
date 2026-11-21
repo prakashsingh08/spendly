@@ -98,7 +98,7 @@ pytest -s
 | `GET /login` | Implemented — renders `login.html`; redirects to profile if logged in (Step 3) |
 | `POST /login` | Implemented — authenticates, sets session, redirects to profile (Step 3) |
 | `GET /logout` | Implemented — clears session, redirects to landing (Step 3) |
-| `GET /profile` | Implemented — `@login_required`, renders `profile.html` with account details and spending summary (Step 4), plus recent transactions and category breakdown (Step 5) |
+| `GET /profile` | Implemented — `@login_required`, renders `profile.html` with account details and spending summary (Step 4), plus recent transactions and category breakdown (Step 5), filterable by `?start=`/`?end=` date range (Step 6) |
 | `GET /expenses/add` | Stub — Step 7 |
 | `GET /expenses/<id>/edit` | Stub — Step 8 |
 | `GET /expenses/<id>/delete` | Stub — Step 9 |

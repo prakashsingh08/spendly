@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from functools import wraps
 
 from flask import (
@@ -24,6 +24,7 @@ from database.db import (
     get_user_by_id,
     init_db,
     seed_db,
+    user_has_expenses,
 )
 
 app = Flask(__name__)
@@ -102,9 +103,13 @@ def member_since(value):
 # Profile data — summary stats                                        #
 # ------------------------------------------------------------------ #
 
-def profile_summary_context(user_id):
+def profile_summary_context(user_id, start_date=None, end_date=None):
     """Template context for the profile's summary stat tiles."""
-    return {"summary": get_expense_summary(user_id)}
+    return {
+        "summary": get_expense_summary(
+            user_id, start_date=start_date, end_date=end_date
+        )
+    }
 
 # ---------------------- end summary stats ------------------------- #
 
@@ -113,9 +118,13 @@ def profile_summary_context(user_id):
 # Profile data — transaction history                                  #
 # ------------------------------------------------------------------ #
 
-def profile_transactions_context(user_id):
+def profile_transactions_context(user_id, start_date=None, end_date=None):
     """Template context for the profile's recent-transactions table."""
-    return {"recent_expenses": get_recent_expenses(user_id)}
+    return {
+        "recent_expenses": get_recent_expenses(
+            user_id, start_date=start_date, end_date=end_date
+        )
+    }
 
 
 @app.template_filter("format_date")
@@ -132,11 +141,98 @@ def format_date(value):
 # Profile data — category breakdown                                   #
 # ------------------------------------------------------------------ #
 
-def profile_categories_context(user_id):
+def profile_categories_context(user_id, start_date=None, end_date=None):
     """Template context for the profile's spending-by-category bars."""
-    return {"category_breakdown": get_category_breakdown(user_id)}
+    return {
+        "category_breakdown": get_category_breakdown(
+            user_id, start_date=start_date, end_date=end_date
+        )
+    }
 
 # -------------------- end category breakdown ---------------------- #
+
+
+# ------------------------------------------------------------------ #
+# Profile data — date range filter                                    #
+# ------------------------------------------------------------------ #
+
+INVALID_DATE_ERROR = "Please enter valid dates."
+DATE_ORDER_ERROR = "Start date must be on or before end date."
+
+
+def parse_date_filter(args):
+    """Parse optional 'start'/'end' ISO dates from query args.
+
+    Returns {"start", "end", "error"} with date objects or None. Any
+    invalid input clears both bounds and sets an error message.
+    """
+    bounds = {}
+    for key in ("start", "end"):
+        raw = (args.get(key) or "").strip()
+        if not raw:
+            bounds[key] = None
+            continue
+        try:
+            bounds[key] = date.fromisoformat(raw)
+        except ValueError:
+            return {"start": None, "end": None, "error": INVALID_DATE_ERROR}
+
+    start, end = bounds["start"], bounds["end"]
+    if start and end and start > end:
+        return {"start": None, "end": None, "error": DATE_ORDER_ERROR}
+    return {"start": start, "end": end, "error": None}
+
+
+def _preset(key, label, start, end):
+    """One preset, with the query params its link needs ({} = no filter)."""
+    params = {"start": start.isoformat(), "end": end.isoformat()} if start else {}
+    return {"key": key, "label": label, "start": start, "end": end,
+            "params": params}
+
+
+def date_presets(today):
+    """Return the quick-pick date ranges shown above the profile stats."""
+    return [
+        _preset("this_month", "This month", today.replace(day=1), today),
+        _preset("last_30_days", "Last 30 days",
+                today - timedelta(days=29), today),
+        _preset("all_time", "All time", None, None),
+    ]
+
+
+def build_date_filter(args, today=None):
+    """Template context describing the active profile date filter."""
+    parsed = parse_date_filter(args)
+    presets = date_presets(today or date.today())
+    # A list, not one key: on the 30th "This month" and "Last 30 days"
+    # cover the same range, and both should be highlighted.
+    active = [
+        p["key"] for p in presets
+        if (p["start"], p["end"]) == (parsed["start"], parsed["end"])
+    ]
+    is_active = bool(parsed["start"] or parsed["end"])
+    return {
+        **parsed,
+        "start_iso": parsed["start"].isoformat() if parsed["start"] else None,
+        "end_iso": parsed["end"].isoformat() if parsed["end"] else None,
+        "is_active": is_active,
+        "scope_label": "Selected range" if is_active else "All time",
+        "presets": presets,
+        "active": active,
+    }
+
+
+def profile_empty_state_context(user_id, summary, date_filter):
+    """Whether the user has any expenses at all, for the empty-state text.
+
+    Only queries when the filtered count is 0 under an active filter.
+    """
+    has_any = summary["count"] > 0 or (
+        date_filter["is_active"] and user_has_expenses(user_id)
+    )
+    return {"has_any_expenses": has_any}
+
+# ------------------- end date range filter ------------------------ #
 
 
 # ------------------------------------------------------------------ #
@@ -227,12 +323,19 @@ def profile():
         session.clear()
         flash(LOGIN_REQUIRED_MESSAGE, "error")
         return redirect(url_for("login"))
+    date_filter = build_date_filter(request.args)
+    date_range = (date_filter["start_iso"], date_filter["end_iso"])
+    summary_context = profile_summary_context(user["id"], *date_range)
     return render_template(
         "profile.html",
         user=user,
-        **profile_summary_context(user["id"]),
-        **profile_transactions_context(user["id"]),
-        **profile_categories_context(user["id"]),
+        date_filter=date_filter,
+        **summary_context,
+        **profile_empty_state_context(
+            user["id"], summary_context["summary"], date_filter
+        ),
+        **profile_transactions_context(user["id"], *date_range),
+        **profile_categories_context(user["id"], *date_range),
     )
 
 

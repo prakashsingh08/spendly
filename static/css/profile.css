@@ -101,6 +101,87 @@
     font-variant-numeric: tabular-nums;
 }
 
+.profile-stat-note {
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+}
+
+/* ===== DATE FILTER ===== */
+.date-filter {
+    margin-bottom: 2.5rem;
+    padding: 1.5rem 2rem;
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.date-filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+.date-filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    flex: 1 1 10rem;
+    min-width: 0;
+}
+
+.date-filter-field label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+}
+
+.date-filter-apply { font-size: 0.95rem; }
+
+.date-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+}
+
+.date-preset {
+    padding: 0.35rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.date-preset:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.date-preset[aria-current="true"] {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 500;
+}
+
+.date-filter-range {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-soft);
+    color: var(--ink-muted);
+    font-size: 0.9rem;
+}
+
+@media (max-width: 600px) {
+    .date-filter { padding: 1.25rem; }
+    .date-filter-field { flex-basis: 100%; }
+    .date-filter-apply { width: 100%; }
+}
+/* ===== END DATE FILTER ===== */
+
 .profile-empty {
     margin-top: 1.25rem;
     padding: 1rem 1.25rem;
